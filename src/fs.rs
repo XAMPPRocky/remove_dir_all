@@ -7,7 +7,6 @@ use std::path::{Path, PathBuf};
 use winapi::*;
 use kernel::*;
 
-pub const ERROR_INSUFFICIENT_BUFFER: DWORD = 122;
 pub const VOLUME_NAME_DOS: DWORD = 0x0;
 
 struct RmdirContext<'a> {
