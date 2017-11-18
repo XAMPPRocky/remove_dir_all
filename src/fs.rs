@@ -159,7 +159,7 @@ fn rename(file: &File, new: &Path, replace: bool) -> io::Result<()> {
     unsafe {
         // Thanks to alignment guarantees on Windows this works
         // (8 for 32-bit and 16 for 64-bit)
-        let mut info = data.as_mut_ptr() as *mut FILE_RENAME_INFO;
+        let info = data.as_mut_ptr() as *mut FILE_RENAME_INFO;
         // The type of ReplaceIfExists is BOOL, but it actually expects a
         // BOOLEAN. This means true is -1, not c::TRUE.
         (*info).ReplaceIfExists = if replace { -1 } else { FALSE };
