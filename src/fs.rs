@@ -25,7 +25,7 @@ struct RmdirContext<'a> {
 ///     remove_dir_all("./temp/").unwrap();
 /// }
 /// ```
-pub fn remove_dir_all(path: &Path) -> io::Result<()> {
+pub fn remove_dir_all<P: AsRef<Path>>(path: P) -> io::Result<()> {
     // On Windows it is not enough to just recursively remove the contents of a
     // directory and then the directory itself. Deleting does not happen
     // instantaneously, but is scheduled.
@@ -69,6 +69,7 @@ pub fn remove_dir_all(path: &Path) -> io::Result<()> {
 
     // Open the path once to get the canonical path, file type and attributes.
     let (path, metadata) = {
+        let path = path.as_ref();
         let mut opts = OpenOptions::new();
         opts.access_mode(FILE_READ_ATTRIBUTES);
         opts.custom_flags(FILE_FLAG_BACKUP_SEMANTICS |
