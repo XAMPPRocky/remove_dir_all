@@ -25,7 +25,7 @@ struct RmdirContext<'a> {
 ///     remove_dir_all("./temp/").unwrap();
 /// }
 /// ```
-pub fn remove_dir_all(path: &Path) -> io::Result<()> {
+pub fn remove_dir_all<P: AsRef<Path>>(path: P) -> io::Result<()> {
     // On Windows it is not enough to just recursively remove the contents of a
     // directory and then the directory itself. Deleting does not happen
     // instantaneously, but is scheduled.
@@ -69,6 +69,7 @@ pub fn remove_dir_all(path: &Path) -> io::Result<()> {
 
     // Open the path once to get the canonical path, file type and attributes.
     let (path, metadata) = {
+        let path = path.as_ref();
         let mut opts = OpenOptions::new();
         opts.access_mode(FILE_READ_ATTRIBUTES);
         opts.custom_flags(FILE_FLAG_BACKUP_SEMANTICS |
@@ -158,7 +159,7 @@ fn rename(file: &File, new: &Path, replace: bool) -> io::Result<()> {
     unsafe {
         // Thanks to alignment guarantees on Windows this works
         // (8 for 32-bit and 16 for 64-bit)
-        let mut info = data.as_mut_ptr() as *mut FILE_RENAME_INFO;
+        let info = data.as_mut_ptr() as *mut FILE_RENAME_INFO;
         // The type of ReplaceIfExists is BOOL, but it actually expects a
         // BOOLEAN. This means true is -1, not c::TRUE.
         (*info).ReplaceIfExists = if replace { -1 } else { FALSE };
