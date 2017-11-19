@@ -61,3 +61,4 @@ test_script:
       cargo run --target %TARGET% &&
       cargo run --target %TARGET% --release
     )
+build: false
