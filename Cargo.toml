@@ -16,5 +16,4 @@ keywords = ["utility", "filesystem", "remove_dir", "windows"]
 categories = ["filesystem"]
 
 [target.'cfg(windows)'.dependencies]
-winapi = "0.2"
-kernel32-sys = "0.2"
+winapi = { version = "0.3", features = ["std", "errhandlingapi", "winerror", "fileapi", "winbase"]}
