@@ -11,7 +11,7 @@ license = "MIT/Apache-2.0"
 name = "remove_dir_all"
 readme = "README.md"
 repository = "https://github.com/Aaronepower/remove_dir_all.git"
-version = "0.4.0"
+version = "0.5.0"
 keywords = ["utility", "filesystem", "remove_dir", "windows"]
 categories = ["filesystem"]
 
