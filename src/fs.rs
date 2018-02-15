@@ -4,8 +4,13 @@ use std::{io, ptr};
 use std::os::windows::prelude::*;
 use std::path::{Path, PathBuf};
 
-use winapi::*;
-use kernel::*;
+use winapi::shared::minwindef::*;
+use winapi::shared::winerror::*;
+use winapi::um::errhandlingapi::*;
+use winapi::um::fileapi::*;
+use winapi::um::minwinbase::*;
+use winapi::um::winbase::*;
+use winapi::um::winnt::*;
 
 pub const VOLUME_NAME_DOS: DWORD = 0x0;
 

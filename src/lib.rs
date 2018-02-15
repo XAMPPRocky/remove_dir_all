@@ -1,7 +1,5 @@
 #[cfg(windows)]
 extern crate winapi;
-#[cfg(windows)]
-extern crate kernel32 as kernel;
 
 #[cfg(windows)]
 mod fs;
