@@ -106,29 +106,36 @@ pub fn remove_dir_all<P: AsRef<Path>>(path: P) -> io::Result<()> {
 }
 
 fn remove_item(path: &Path, ctx: &mut RmdirContext) -> io::Result<()> {
-    if !ctx.readonly {
-        let mut opts = OpenOptions::new();
-        opts.access_mode(DELETE);
-        opts.custom_flags(FILE_FLAG_BACKUP_SEMANTICS | // delete directory
-                          FILE_FLAG_OPEN_REPARSE_POINT | // delete symlink
-                          FILE_FLAG_DELETE_ON_CLOSE);
-        let file = opts.open(path)?;
-        move_item(&file, ctx)
-    } else {
+    if ctx.readonly {
         // remove read-only permision
         let mut permissions = path.metadata()?.permissions();
         permissions.set_readonly(false);
 
         fs::set_permissions(path, permissions)?;
-        let file = File::open(path)?;
-        move_item(&file, ctx)?;
-
-        // restore read-only flag just in case there are other hard links
-        let mut perm = fs::metadata(&path)?.permissions();
-        perm.set_readonly(true);
-        fs::set_permissions(&path, perm)?;
-        Ok(())
     }
+
+    let mut opts = OpenOptions::new();
+    opts.access_mode(DELETE);
+    opts.custom_flags(FILE_FLAG_BACKUP_SEMANTICS | // delete directory
+                        FILE_FLAG_OPEN_REPARSE_POINT | // delete symlink
+                        FILE_FLAG_DELETE_ON_CLOSE);
+    let file = opts.open(path)?;
+    move_item(&file, ctx)?;
+
+    if ctx.readonly {
+        // restore read-only flag just in case there are other hard links
+        match fs::metadata(&path) {
+            Ok(metadata) => {
+                let mut perm = metadata.permissions();
+                perm.set_readonly(true);
+                fs::set_permissions(&path, perm)?;
+            },
+            Err(ref err) if err.kind() == io::ErrorKind::NotFound => {},
+            err => return err.map(|_| ()),
+        }
+    }
+
+    Ok(())
 }
 
 fn move_item(file: &File, ctx: &mut RmdirContext) -> io::Result<()> {
