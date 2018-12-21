@@ -212,14 +212,14 @@ fn get_path(f: &File) -> io::Result<PathBuf> {
 
 fn remove_dir_all_recursive(path: &Path, ctx: &mut RmdirContext) -> io::Result<()> {
     let dir_readonly = ctx.readonly;
-    for child in try!(fs::read_dir(path)) {
-        let child = try!(child);
-        let child_type = try!(child.file_type());
-        ctx.readonly = try!(child.metadata()).permissions().readonly();
+    for child in fs::read_dir(path)? {
+        let child = child?;
+        let child_type = child.file_type()?;
+        ctx.readonly = child.metadata()?.permissions().readonly();
         if child_type.is_dir() {
-            try!(remove_dir_all_recursive(&child.path(), ctx));
+            remove_dir_all_recursive(&child.path(), ctx)?;
         } else {
-            try!(remove_item(&child.path().as_ref(), ctx));
+            remove_item(&child.path().as_ref(), ctx)?;
         }
     }
     ctx.readonly = dir_readonly;
