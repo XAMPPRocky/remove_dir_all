@@ -11,10 +11,10 @@ macro_rules! assert_not_found {
             Ok(_) => panic!("did not expect to retrieve metadata for {}", $path),
             Err(ref err) if err.kind() != ::std::io::ErrorKind::NotFound => {
                 panic!("expected path {} to be NotFound, was {:?}", $path, err)
-            },
+            }
             _ => {}
         }
-    }}
+    }};
 }
 
 #[test]
@@ -78,7 +78,10 @@ fn removes_read_only() {
             }
         }
 
-        assert_eq!(i % 2 == 0, fs::metadata(&file_path).unwrap().permissions().readonly());
+        assert_eq!(
+            i % 2 == 0,
+            fs::metadata(&file_path).unwrap().permissions().readonly()
+        );
 
         if i % 2 == 1 {
             let metadata = fs::metadata(&path).unwrap();
