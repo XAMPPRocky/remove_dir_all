@@ -9,7 +9,7 @@
 A reliable implementation of `remove_dir_all` for Windows. For Unix systems
 re-exports `std::fs::remove_dir_all`.
 
-```rust
+```rust,no_run
 extern crate remove_dir_all;
 
 use remove_dir_all::*;

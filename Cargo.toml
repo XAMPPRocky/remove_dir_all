@@ -17,3 +17,6 @@ categories = ["filesystem"]
 
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["std", "errhandlingapi", "winerror", "fileapi", "winbase"]}
+
+[dev-dependencies]
+doc-comment = "0.3"

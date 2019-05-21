@@ -1,6 +1,13 @@
 #[cfg(windows)]
 extern crate winapi;
 
+#[cfg(test)]
+#[macro_use]
+extern crate doc_comment;
+
+#[cfg(test)]
+doctest!("../README.md");
+
 #[cfg(windows)]
 mod fs;
 
