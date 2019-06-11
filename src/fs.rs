@@ -24,9 +24,11 @@ struct RmdirContext<'a> {
 /// ```rust
 /// extern crate remove_dir_all;
 ///
+/// use std::fs;
 /// use remove_dir_all::*;
 ///
 /// fn main() {
+///     fs::create_dir("./temp/").unwrap();
 ///     remove_dir_all("./temp/").unwrap();
 /// }
 /// ```
@@ -166,9 +168,9 @@ fn move_item(file: &File, ctx: &mut RmdirContext) -> io::Result<()> {
 fn rename(file: &File, new: &Path, replace: bool) -> io::Result<()> {
     // &self must be opened with DELETE permission
     use std::iter;
-    #[cfg(target_arch = "x86")]
+    #[cfg(target_pointer_width = "32")]
     const STRUCT_SIZE: usize = 12;
-    #[cfg(target_arch = "x86_64")]
+    #[cfg(target_pointer_width = "64")]
     const STRUCT_SIZE: usize = 20;
 
     // FIXME: check for internal NULs in 'new'
