@@ -5,7 +5,8 @@ include = [
     "Cargo.toml",
     "LICENCE-APACHE",
     "LICENCE-MIT",
-    "src/**/*"
+    "src/**/*",
+    "README.md"
 ]
 license = "MIT/Apache-2.0"
 name = "remove_dir_all"
