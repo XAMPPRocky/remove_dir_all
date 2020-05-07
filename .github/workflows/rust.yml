@@ -16,6 +16,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - run: rustup default ${{ matrix.channel }}
+    - run: rustup target add ${{ matrix.arch }}-pc-windows-${{ matrix.variant }}
     - name: Build
       run: cargo build --verbose --target ${{ matrix.arch }}-pc-windows-${{ matrix.variant }}
     - name: Run tests
