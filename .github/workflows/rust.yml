@@ -13,7 +13,6 @@ jobs:
         arch: [i686, x86_64, aarch64]
         variant: [gnu, msvc]
         channel: [stable, beta, nightly]
-        key: [value1, ...valueN]
         exclude:
           - arch: aarch64
             variant: gnu
