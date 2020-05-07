@@ -15,6 +15,7 @@ jobs:
         channel: [stable, beta, nightly]
     steps:
     - uses: actions/checkout@v2
+    - run: rustup default ${{ matrix.channel }}
     - name: Build
       run: cargo build --verbose --target ${{ matrix.arch }}-pc-windows-${{ matrix.variant }}
     - name: Run tests
