@@ -9,11 +9,11 @@
 #[cfg(windows)]
 extern crate winapi;
 
-#[cfg(test)]
+#[cfg(doctest)]
 #[macro_use]
 extern crate doc_comment;
 
-#[cfg(test)]
+#[cfg(doctest)]
 doctest!("../README.md");
 
 #[cfg(windows)]
