@@ -13,11 +13,13 @@ jobs:
         arch: [i686, x86_64, aarch64]
         variant: [gnu, msvc]
         channel: [stable, beta, nightly]
+        key: [value1, ...valueN]
         exclude:
           - arch: aarch64
             variant: gnu
     steps:
     - uses: actions/checkout@v2
+    - run: choco install msys2
     - run: rustup default ${{ matrix.channel }}
     - run: rustup target add ${{ matrix.arch }}-pc-windows-${{ matrix.variant }}
     - name: Build
