@@ -17,6 +17,8 @@ jobs:
         exclude:
           - arch: aarch64
             variant: gnu
+          - arch: i686
+            variant: gnu
     steps:
     - uses: actions/checkout@v2
     - run: choco install msys2
@@ -26,4 +28,5 @@ jobs:
     - name: Build
       run: cargo build --verbose --target ${{ matrix.arch }}-pc-windows-${{ matrix.variant }}
     - name: Run tests
+      if: matrix.arch != aarch64
       run: cargo test --verbose --target ${{ matrix.arch }}-pc-windows-${{ matrix.variant }}
