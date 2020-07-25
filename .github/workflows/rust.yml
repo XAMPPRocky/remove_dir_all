@@ -6,7 +6,18 @@ on:
   pull_request:
     branches: [ master ]
 jobs:
-  build:
+  build-unix:
+    runs-on: ${{ matrix.os }}-latest
+    strategy:
+      matrix:
+        channel: [stable, beta, nightly]
+        os: [ubuntu, macos]
+    steps:
+    - uses: actions/checkout@v2
+    - run: rustup default ${{ matrix.channel }}
+    - run: cargo build --verbose --all-targets
+    - run: cargo test
+  build-windows:
     runs-on: windows-latest
     strategy:
       fail-fast: false
