@@ -1,7 +1,4 @@
 #![cfg(windows)]
-
-extern crate remove_dir_all;
-
 use remove_dir_all::remove_dir_all;
 use std::fs::{self, File};
 
@@ -60,6 +57,7 @@ fn removes_dirs() {
 
 #[test]
 fn removes_read_only() {
+    env_logger::init();
     for i in 0..5 {
         let path = format!("./readonly/{}/subdir", i);
 

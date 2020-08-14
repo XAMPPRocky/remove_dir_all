@@ -18,7 +18,18 @@ repository = "https://github.com/XAMPPRocky/remove_dir_all.git"
 version = "0.5.3"
 
 [target.'cfg(windows)'.dependencies]
+log = "0.4.11"
+num_cpus = "1.13"
+rayon = "1.4"
 winapi = {version = "0.3", features = ["std", "errhandlingapi", "winerror", "fileapi", "winbase"]}
 
 [dev-dependencies]
 doc-comment = "0.3"
+env_logger = "0.7.1"
+tempfile = "3.1"
+
+# There is a circular dependency: tempfile depends on remove_dir_all, depends on
+# tempfile for testing; so to be able to debug tests in remove_dir_all, we have
+# to tell cargo that this remove_dir_all is canonical.
+[patch.crates-io]
+remove_dir_all = {path = "."}

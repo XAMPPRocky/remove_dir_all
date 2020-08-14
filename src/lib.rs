@@ -6,6 +6,8 @@
 #![deny(missing_debug_implementations)]
 #![deny(missing_docs)]
 #![deny(rust_2018_idioms)]
+// See under "known problems" https://rust-lang.github.io/rust-clippy/master/index.html#mutex_atomic
+#![allow(clippy::mutex_atomic)]
 
 #[cfg(doctest)]
 #[macro_use]
