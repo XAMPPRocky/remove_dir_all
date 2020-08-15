@@ -114,7 +114,7 @@ pub fn remove_dir_all<P: AsRef<Path>>(path: P) -> io::Result<()> {
     }
 }
 
-fn remove_item(path: &Path, ctx: &mut RmdirContext) -> io::Result<()> {
+fn remove_item(path: &Path, ctx: &mut RmdirContext<'_>) -> io::Result<()> {
     if ctx.readonly {
         // remove read-only permision
         let mut permissions = path.metadata()?.permissions();
@@ -149,7 +149,7 @@ fn remove_item(path: &Path, ctx: &mut RmdirContext) -> io::Result<()> {
     Ok(())
 }
 
-fn move_item(file: &File, ctx: &mut RmdirContext) -> io::Result<()> {
+fn move_item(file: &File, ctx: &mut RmdirContext<'_>) -> io::Result<()> {
     let mut tmpname = ctx.base_dir.join(format! {"rm-{}", ctx.counter});
     ctx.counter += 1;
 
@@ -213,7 +213,7 @@ fn get_path(f: &File) -> io::Result<PathBuf> {
     )
 }
 
-fn remove_dir_all_recursive(path: &Path, ctx: &mut RmdirContext) -> io::Result<()> {
+fn remove_dir_all_recursive(path: &Path, ctx: &mut RmdirContext<'_>) -> io::Result<()> {
     let dir_readonly = ctx.readonly;
     for child in fs::read_dir(path)? {
         let child = child?;

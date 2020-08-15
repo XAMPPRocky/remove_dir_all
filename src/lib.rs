@@ -5,9 +5,7 @@
 
 #![deny(missing_debug_implementations)]
 #![deny(missing_docs)]
-
-#[cfg(windows)]
-extern crate winapi;
+#![deny(rust_2018_idioms)]
 
 #[cfg(doctest)]
 #[macro_use]

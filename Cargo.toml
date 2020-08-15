@@ -1,23 +1,24 @@
 [package]
 authors = ["Aaronepower <theaaronepower@gmail.com>"]
+categories = ["filesystem"]
 description = "A safe, reliable implementation of remove_dir_all for Windows"
+edition = "2018"
 include = [
-    "Cargo.toml",
-    "LICENCE-APACHE",
-    "LICENCE-MIT",
-    "src/**/*",
-    "README.md"
+  "Cargo.toml",
+  "LICENCE-APACHE",
+  "LICENCE-MIT",
+  "src/**/*",
+  "README.md",
 ]
+keywords = ["utility", "filesystem", "remove_dir", "windows"]
 license = "MIT/Apache-2.0"
 name = "remove_dir_all"
 readme = "README.md"
 repository = "https://github.com/XAMPPRocky/remove_dir_all.git"
 version = "0.5.3"
-keywords = ["utility", "filesystem", "remove_dir", "windows"]
-categories = ["filesystem"]
 
 [target.'cfg(windows)'.dependencies]
-winapi = { version = "0.3", features = ["std", "errhandlingapi", "winerror", "fileapi", "winbase"]}
+winapi = {version = "0.3", features = ["std", "errhandlingapi", "winerror", "fileapi", "winbase"]}
 
 [dev-dependencies]
 doc-comment = "0.3"
