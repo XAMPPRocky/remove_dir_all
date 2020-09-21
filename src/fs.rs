@@ -60,8 +60,8 @@ pub fn remove_dir_all<P: AsRef<Path>>(path: P) -> io::Result<()> {
     // To handle files with names like `CON` and `morse .. .`,  and when a
     // directory structure is so deep it needs long path names the path is first
     // converted to the Win32 file namespace by calling `canonicalize()`.
-    let path = path.as_ref().canonicalize()?;
-    _delete_dir_contents(&path)?;
+
+    let path = _remove_dir_contents(path)?;
     let metadata = path.metadata()?;
     if metadata.permissions().readonly() {
         delete_readonly(metadata, &path)?;
@@ -74,6 +74,13 @@ pub fn remove_dir_all<P: AsRef<Path>>(path: P) -> io::Result<()> {
         log::trace!("removed {}", &path.display());
     }
     Ok(())
+}
+
+/// Returns the canonicalised path, for one of caller's convenience.
+pub fn _remove_dir_contents<P: AsRef<Path>>(path: P) -> io::Result<PathBuf> {
+    let path = path.as_ref().canonicalize()?;
+    _delete_dir_contents(&path)?;
+    Ok(path)
 }
 
 fn _delete_dir_contents(path: &PathBuf) -> io::Result<()> {
