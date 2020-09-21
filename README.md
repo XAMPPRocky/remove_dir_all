@@ -9,6 +9,9 @@
 A reliable implementation of `remove_dir_all` for Windows. For Unix systems
 re-exports `std::fs::remove_dir_all`.
 
+Also provides `remove_dir_contents` for both Windows and Unix.  This
+removes just the contents of the directory, if it exists.
+
 ```rust,no_run
 extern crate remove_dir_all;
 
