@@ -19,6 +19,9 @@ doctest!("../README.md");
 #[cfg(windows)]
 mod fs;
 
+#[cfg(not(windows))]
+mod unix;
+
 #[cfg(windows)]
 pub use self::fs::remove_dir_all;
 
