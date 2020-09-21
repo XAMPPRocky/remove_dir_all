@@ -12,6 +12,9 @@ re-exports `std::fs::remove_dir_all`.
 Also provides `remove_dir_contents` for both Windows and Unix.  This
 removes just the contents of the directory, if it exists.
 
+And provides `ensure_e pty_dir` for both Windows and Unix.  This
+creates an empty directory, or deletes the contents of an existing one.
+
 ```rust,no_run
 extern crate remove_dir_all;
 

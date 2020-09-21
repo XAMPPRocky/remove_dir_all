@@ -7,10 +7,10 @@ use crate::fs::_remove_dir_contents;
 #[cfg(not(windows))]
 use crate::unix::_remove_dir_contents;
 
-/// Deletes the contents of `dir_path`, but not the directory iteself.
+/// Deletes the contents of `path`, but not the directory iteself.
 ///
-/// If `dir_path` is a symlink to a directory, deletes the contents
-/// of that directory.  Fails if `dir_path` does not exist.
+/// If `path` is a symlink to a directory, deletes the contents
+/// of that directory.  Fails if `path` does not exist.
 pub fn remove_dir_contents<P: AsRef<Path>>(path: P) -> io::Result<()> {
     // This wrapper function exists because the core function
     // for Windows, in crate::fs, returns a PathBuf, which our
@@ -19,11 +19,27 @@ pub fn remove_dir_contents<P: AsRef<Path>>(path: P) -> io::Result<()> {
     Ok(())
 }
 
+/// Makes `path` an empty directory: if it does not exist, it is
+/// created it as an empty directory (as if with
+/// `std::fs::create_dir`); if it does exist, its contents are
+/// deleted (as if with `remove_dir_contents`).
+///
+/// It is an error if `path` exists but is not a directory (or
+/// a symlink to one).
+pub fn ensure_empty_dir<P: AsRef<Path>>(path: P) -> io::Result<()> {
+    match std::fs::create_dir(&path) {
+        Err(e) if e.kind() == io::ErrorKind::AlreadyExists
+            => remove_dir_contents(path),
+        otherwise => otherwise,
+    }
+}
+
 #[cfg(test)]
 mod test {
     use tempfile::TempDir;
     use crate::remove_dir_all;
     use crate::remove_dir_contents;
+    use crate::ensure_empty_dir;
     use std::fs::{self, File};
     use std::path::PathBuf;
     use std::io;
@@ -67,6 +83,23 @@ mod test {
         remove_dir_contents(&p.ours)?;
         remove_dir_all(&p.ours)?;
         expect_failure(io::ErrorKind::NotFound, remove_dir_contents(&p.ours))?;
+        Ok(())
+    }
+
+    #[test]
+    fn ensure_rm() -> Result<(), io::Error> {
+        let p = prep()?;
+
+        expect_failure(io::ErrorKind::Other, ensure_empty_dir(&p.file))?;
+
+        ensure_empty_dir(&p.ours)?;
+        expect_failure(io::ErrorKind::NotFound, File::open(&p.file))?;
+        ensure_empty_dir(&p.ours)?;
+
+        remove_dir_all(&p.ours)?;
+        ensure_empty_dir(&p.ours)?;
+        File::create(&p.file)?;
+
         Ok(())
     }
 }
