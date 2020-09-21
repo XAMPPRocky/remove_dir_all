@@ -25,6 +25,7 @@ mod test {
     use crate::remove_dir_all;
     use crate::remove_dir_contents;
     use std::fs::{self, File};
+    use std::path::PathBuf;
     use std::io;
 
     fn expect_failure<T>(k: io::ErrorKind, r: io::Result<T>) -> io::Result<()> {
@@ -38,23 +39,34 @@ mod test {
         }
     }
 
-    #[test]
-    fn mkdir_rm() -> Result<(), io::Error> {
+    struct Prep {
+        _tmp: TempDir,
+        ours: PathBuf,
+        file: PathBuf,
+    }
+
+    fn prep() -> Result<Prep, io::Error> {
         let tmp = TempDir::new()?;
         let ours = tmp.path().join("t.mkdir");
         let file = ours.join("file");
         fs::create_dir(&ours)?;
         File::create(&file)?;
         File::open(&file)?;
+        Ok(Prep { _tmp: tmp, ours, file })
+    }
 
-        expect_failure(io::ErrorKind::Other, remove_dir_contents(&file))?;
+    #[test]
+    fn mkdir_rm() -> Result<(), io::Error> {
+        let p = prep()?;
 
-        remove_dir_contents(&ours)?;
-        expect_failure(io::ErrorKind::NotFound, File::open(&file))?;
+        expect_failure(io::ErrorKind::Other, remove_dir_contents(&p.file))?;
 
-        remove_dir_contents(&ours)?;
-        remove_dir_all(&ours)?;
-        expect_failure(io::ErrorKind::NotFound, remove_dir_contents(&ours))?;
+        remove_dir_contents(&p.ours)?;
+        expect_failure(io::ErrorKind::NotFound, File::open(&p.file))?;
+
+        remove_dir_contents(&p.ours)?;
+        remove_dir_all(&p.ours)?;
+        expect_failure(io::ErrorKind::NotFound, remove_dir_contents(&p.ours))?;
         Ok(())
     }
 }
