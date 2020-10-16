@@ -1,5 +1,5 @@
 [package]
-authors = ["Aaronepower <theaaronepower@gmail.com>"]
+authors = ["Erin P. <xampprocky@gmail.com>", "Robert C. <robertc@robertcollins.net>"]
 categories = ["filesystem"]
 description = "A safe, reliable implementation of remove_dir_all for Windows"
 edition = "2018"
