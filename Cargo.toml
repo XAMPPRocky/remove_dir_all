@@ -25,5 +25,5 @@ winapi = {version = "0.3", features = ["std", "errhandlingapi", "winerror", "fil
 
 [dev-dependencies]
 doc-comment = "0.3"
-env_logger = "0.7.1"
+env_logger = "0.8.1"
 tempfile = "3.1"
