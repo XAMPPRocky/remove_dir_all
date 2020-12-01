@@ -2,7 +2,7 @@
 
 [![Latest Version](https://img.shields.io/crates/v/remove_dir_all.svg)](https://crates.io/crates/remove_dir_all)
 [![Docs](https://docs.rs/remove_dir_all/badge.svg)](https://docs.rs/remove_dir_all)
-[![License](https://img.shields.io/github/license/XAMPPRocky/remove_dir_all.svg)](https://github.com/XAMPPRocky/remove_dir_all)
+[![License](https://img.shields.io/crates/l/remove_dir_all.svg)](https://github.com/XAMPPRocky/remove_dir_all)
 
 ## Description
 
