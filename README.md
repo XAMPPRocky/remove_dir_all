@@ -6,14 +6,17 @@
 
 ## Description
 
-A reliable implementation of `remove_dir_all` for Windows. For Unix systems
-re-exports `std::fs::remove_dir_all`.
+Reliable and fast directory removal functions.
 
-Also provides `remove_dir_contents` for both Windows and Unix.  This
-removes just the contents of the directory, if it exists.
+* `remove_dir_all` - on non-Windows this is a re-export of
+  `std::fs::remove_dir_all`. For Windows an implementation that handles the
+  locking of directories that occurs when deleting directory trees rapidly.
 
-And provides `ensure_e pty_dir` for both Windows and Unix.  This
-creates an empty directory, or deletes the contents of an existing one.
+* `remove_dir_contents` - as for `remove_dir_all` but does not delete the
+  supplied root directory.
+
+* `ensure_empty_dir` - as for `remove_dir_contents` but will create the
+  directory if it does not exist.
 
 ```rust,no_run
 extern crate remove_dir_all;
@@ -22,6 +25,7 @@ use remove_dir_all::*;
 
 fn main() {
     remove_dir_all("./temp/").unwrap();
+    remove_dir_contents("./cache/").unwrap();
 }
 ```
 
