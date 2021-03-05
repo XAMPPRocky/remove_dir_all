@@ -23,6 +23,9 @@ num_cpus = "1.13"
 rayon = "1.4"
 winapi = {version = "0.3", features = ["std", "errhandlingapi", "winerror", "fileapi", "winbase"]}
 
+[target.'cfg(not(windows))'.dependencies]
+libc = "0.2"
+
 [dev-dependencies]
 doc-comment = "0.3"
 env_logger = "0.8.1"
