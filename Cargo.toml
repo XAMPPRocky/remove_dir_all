@@ -1,5 +1,8 @@
 [package]
-authors = ["Erin P. <xampprocky@gmail.com>", "Robert C. <robertc@robertcollins.net>"]
+authors = [
+  "Erin P. <xampprocky@gmail.com>",
+  "Robert C. <robertc@robertcollins.net>",
+]
 categories = ["filesystem"]
 description = "A safe, reliable implementation of remove_dir_all for Windows"
 edition = "2018"
@@ -17,11 +20,24 @@ readme = "README.md"
 repository = "https://github.com/XAMPPRocky/remove_dir_all.git"
 version = "0.7.1-alpha.0"
 
+[features]
+default = []
+nightly = []
+
+[dependencies]
+cfg-if = "1.0.0"
+
 [target.'cfg(windows)'.dependencies]
 log = "0.4.11"
 num_cpus = "1.13"
 rayon = "1.4"
-winapi = {version = "0.3", features = ["std", "errhandlingapi", "winerror", "fileapi", "winbase"]}
+winapi = { version = "0.3", features = [
+  "std",
+  "errhandlingapi",
+  "winerror",
+  "fileapi",
+  "winbase",
+] }
 
 [target.'cfg(not(windows))'.dependencies]
 libc = "0.2"

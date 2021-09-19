@@ -2,9 +2,9 @@ name: Rust
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 jobs:
   build-unix:
     runs-on: ${{ matrix.os }}-latest
@@ -13,10 +13,10 @@ jobs:
         channel: [stable, beta, nightly]
         os: [ubuntu, macos]
     steps:
-    - uses: actions/checkout@v2
-    - run: rustup default ${{ matrix.channel }}
-    - run: cargo build --verbose --all-targets
-    - run: cargo test
+      - uses: actions/checkout@v2
+      - run: rustup default ${{ matrix.channel }}
+      - run: cargo build --verbose --all-targets
+      - run: cargo test
   build-windows:
     runs-on: windows-latest
     strategy:
@@ -31,13 +31,16 @@ jobs:
           - arch: i686
             variant: gnu
     steps:
-    - uses: actions/checkout@v2
-    - run: choco install msys2
-      if: matrix.variant == 'gnu'
-    - run: rustup default ${{ matrix.channel }}
-    - run: rustup target add ${{ matrix.arch }}-pc-windows-${{ matrix.variant }}
-    - name: Build
-      run: cargo build --verbose --target ${{ matrix.arch }}-pc-windows-${{ matrix.variant }}
-    - name: Run tests
-      if: matrix.arch != 'aarch64'
-      run: cargo test --verbose --target ${{ matrix.arch }}-pc-windows-${{ matrix.variant }}
+      - uses: actions/checkout@v2
+      - run: choco install msys2
+        if: matrix.variant == 'gnu'
+      - run: rustup default ${{ matrix.channel }}
+      - run: rustup target add ${{ matrix.arch }}-pc-windows-${{ matrix.variant }}
+      - name: Build
+        run: cargo build --verbose --target ${{ matrix.arch }}-pc-windows-${{ matrix.variant }}
+      - name: Run tests (nightly)
+        if: (matrix.arch != 'aarch64') && (matrix.channel == 'nightly')
+        run: cargo test --verbose --target ${{ matrix.arch }}-pc-windows-${{ matrix.variant }} --features nightly
+      - name: Run tests
+        if: (matrix.arch != 'aarch64') && (matrix.channel != 'nightly')
+        run: cargo test --verbose --target ${{ matrix.arch }}-pc-windows-${{ matrix.variant }}
