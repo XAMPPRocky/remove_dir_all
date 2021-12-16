@@ -96,9 +96,14 @@ mod test {
         let tmp = TempDir::new()?;
         let ours = tmp.path().join("t.mkdir");
         let file = ours.join("file");
+        let subdir = ours.join("subdir");
+        let fileinsubdir = subdir.join("anotherfile");
         fs::create_dir(&ours)?;
+        fs::create_dir(&subdir)?;
         File::create(&file)?;
         File::open(&file)?;
+        File::create(&fileinsubdir)?;
+        File::open(&fileinsubdir)?;
         Ok(Prep { _tmp: tmp, ours, file })
     }
 
