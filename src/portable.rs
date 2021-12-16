@@ -55,6 +55,37 @@ mod test {
         }
     }
 
+    fn expect_other_or_unstable_failure<T>(r: io::Result<T>) -> io::Result<()> {
+        match r {
+            Err(e) => match e.kind() {
+                io::ErrorKind::NotFound
+                | io::ErrorKind::PermissionDenied
+                | io::ErrorKind::ConnectionRefused
+                | io::ErrorKind::ConnectionReset
+                | io::ErrorKind::ConnectionAborted
+                | io::ErrorKind::NotConnected
+                | io::ErrorKind::AddrInUse
+                | io::ErrorKind::AddrNotAvailable
+                | io::ErrorKind::BrokenPipe
+                | io::ErrorKind::AlreadyExists
+                | io::ErrorKind::WouldBlock
+                | io::ErrorKind::InvalidInput
+                | io::ErrorKind::InvalidData
+                | io::ErrorKind::TimedOut
+                | io::ErrorKind::WriteZero
+                | io::ErrorKind::Interrupted
+                | io::ErrorKind::Unsupported
+                | io::ErrorKind::UnexpectedEof
+                | io::ErrorKind::OutOfMemory => Err(e),
+                io::ErrorKind::Other | _ => Ok(()),
+            },
+            Ok(_) => Err(io::Error::new(
+                io::ErrorKind::Other,
+                "unexpected success".to_string(),
+            )),
+        }
+    }
+
     struct Prep {
         _tmp: TempDir,
         ours: PathBuf,
@@ -75,7 +106,9 @@ mod test {
     fn mkdir_rm() -> Result<(), io::Error> {
         let p = prep()?;
 
-        expect_failure(io::ErrorKind::Other, remove_dir_contents(&p.file))?;
+        // should be replaced with this once ErrorKind::NotADirectory is stabilized:
+        // expect_failure(io::ErrorKind::NotADirectory, remove_dir_contents(&p.file))?;
+        expect_other_or_unstable_failure(remove_dir_contents(&p.file))?;
 
         remove_dir_contents(&p.ours)?;
         expect_failure(io::ErrorKind::NotFound, File::open(&p.file))?;
@@ -90,7 +123,9 @@ mod test {
     fn ensure_rm() -> Result<(), io::Error> {
         let p = prep()?;
 
-        expect_failure(io::ErrorKind::Other, ensure_empty_dir(&p.file))?;
+        // should be replaced with this once ErrorKind::NotADirectory is stabilized:
+        // expect_failure(io::ErrorKind::NotADirectory, ensure_empty_dir(&p.file))?;
+        expect_other_or_unstable_failure(ensure_empty_dir(&p.file))?;
 
         ensure_empty_dir(&p.ours)?;
         expect_failure(io::ErrorKind::NotFound, File::open(&p.file))?;
