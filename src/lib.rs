@@ -6,6 +6,7 @@
 //! It also provides `remove_dir_contents` and `ensure_empty_dir`
 //! for both Unix and Windows.
 
+#![cfg_attr(feature = "nightly", feature(io_error_more))]
 #![deny(missing_debug_implementations)]
 #![deny(missing_docs)]
 #![deny(rust_2018_idioms)]
