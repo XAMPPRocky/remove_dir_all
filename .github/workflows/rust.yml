@@ -40,7 +40,7 @@ jobs:
         run: cargo build --verbose --target ${{ matrix.arch }}-pc-windows-${{ matrix.variant }}
       - name: Run tests (nightly)
         if: (matrix.arch != 'aarch64') && (matrix.channel == 'nightly')
-        run: cargo test --verbose --target ${{ matrix.arch }}-pc-windows-${{ matrix.variant }} --features nightly
+        run: cargo test --verbose --target ${{ matrix.arch }}-pc-windows-${{ matrix.variant }}
       - name: Run tests
         if: (matrix.arch != 'aarch64') && (matrix.channel != 'nightly')
         run: cargo test --verbose --target ${{ matrix.arch }}-pc-windows-${{ matrix.variant }}
