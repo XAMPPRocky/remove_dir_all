@@ -1,3 +1,7 @@
+# unreleased
+
+- Added feature to enable use of rayon.
+
 # 0.5.2
 
 - Added support for `aarch64-pc-windows-msvc`.
