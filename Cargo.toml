@@ -21,15 +21,16 @@ repository = "https://github.com/XAMPPRocky/remove_dir_all.git"
 version = "0.7.1-alpha.0"
 
 [features]
-default = []
+default = ["parallel"]
+parallel = ["num_cpus", "rayon"]
 
 [dependencies]
 cfg-if = "1.0.0"
 
 [target.'cfg(windows)'.dependencies]
 log = "0.4.11"
-num_cpus = "1.13"
-rayon = "1.4"
+num_cpus = { version = "1.13", optional = true }
+rayon = { version = "1.4", optional = true }
 winapi = { version = "0.3", features = [
   "std",
   "errhandlingapi",

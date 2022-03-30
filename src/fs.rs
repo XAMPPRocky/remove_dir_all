@@ -6,6 +6,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+#[cfg(feature = "parallel")]
 use rayon::prelude::*;
 use winapi::shared::minwindef::*;
 use winapi::um::fileapi::*;
@@ -20,47 +21,55 @@ use winapi::um::winnt::*;
 /// use remove_dir_all::*;
 ///
 /// fs::create_dir("./temp/").unwrap();
-/// remove_dir_all("./temp/").unwrap();
+//// remove_dir_all("./temp/").unwrap();
 /// ```
+///
+/// On Windows it is not enough to just recursively remove the contents of a
+/// directory and then the directory itself. Deleting does not happen
+/// instantaneously, but is delayed by IO being completed in the fs stack and
+/// then the last copy of the directory handle being closed.
+///
+/// Further, typical Windows machines can handle many more concurrent IOs than a
+/// single threaded application is capable of submitting: the overlapped (async)
+/// calls available do not cover the operations needed to perform directory
+/// removal efficiently.
+///
+/// The `parallel` feature enables the use of a work stealing scheduler to
+/// mitigate this limitation: that permits submitting deletions concurrently with
+/// directory scanning, and delete sibling directories in parallel. This allows
+/// the slight latency of STATUS_DELETE_PENDING to only have logarithmic effect:
+/// a very deep tree will pay wall clock time for that overhead per level as the
+/// tree traverse completes, but not linearly for every interior not as a simple
+/// recursive deletion would result in.
+///
+/// Earlier versions of this crate moved the contents of the directory being
+/// deleted to become siblings of `base_dir`, which required write access to the
+/// parent directory under all circumstances; this is no longer done, even when
+/// the parallel feature is disabled
+/// - though we could re-instate if in-use files turn out to be handled very
+///   poorly with this new threaded implementation, or if many people find
+///   threads more concerning that moving files outside of their directory
+///   structure as part of deletion!
+/// - As a result in-use file deletion now leaves files in-situ and blocks the
+///   removal, when previously it would leave the file with a nonsense name
+///   outside the dir - but not block the removal. Generally speaking
+///   applications can choose when to close files, and they should arrange to do
+///   so before deleting the directory.
+///
+/// There is a single small race condition where external side effects may be
+/// left: when deleting a hard linked readonly file, the syscalls required are:
+/// - open
+/// - set rw
+/// - unlink (SetFileDispositionDelete)
+/// - set ro
+///
+/// A crash or power failure could lead to the loss of the readonly bit on the
+/// hardlinked inode.
+///
+/// To handle files with names like `CON` and `morse .. .`,  and when a directory
+/// structure is so deep it needs long path names the path is first converted to
+/// the Win32 file namespace by calling `canonicalize()`.
 pub fn remove_dir_all<P: AsRef<Path>>(path: P) -> io::Result<()> {
-    // On Windows it is not enough to just recursively remove the contents of a
-    // directory and then the directory itself. Deleting does not happen
-    // instantaneously, but is delayed by IO being completed in the fs stack.
-    //
-    // Further, typical Windows machines can handle many more concurrent IOs
-    // than a single threaded application is capable of submitting: the
-    // overlapped (async) calls available do not cover the operations needed to
-    // perform directory removal.
-    //
-    // To work around this, we use a work stealing scheduler and submit
-    // deletions concurrently with directory scanning, and delete sibling
-    // directories in parallel. This allows the slight latency of
-    // STATUS_DELETE_PENDING to only have logarithmic effect: a very deep tree
-    // will pay wall clock time for that overhead per level as the tree traverse
-    // completes, but not for every interior not as a simple recursive deletion
-    // would result in.
-    //
-    // Earlier versions of this crate moved the contents of the directory being
-    // deleted to become siblings of `base_dir`, which required write access to
-    // the parent directory under all circumstances; this is no longer required
-    // - though it may be re-instated if in-use files turn out to be handled
-    //   very poorly with this new threaded implementation.
-    //
-    // There is a single small race condition where external side effects may be
-    // left: when deleting a hard linked readonly file, the syscalls required
-    // are:
-    // - open
-    // - set rw
-    // - unlink (SetFileDispositionDelete)
-    // - set ro
-    //
-    // A crash or power failure could lead to the loss of the readonly bit on
-    // the hardlinked inode.
-    //
-    // To handle files with names like `CON` and `morse .. .`,  and when a
-    // directory structure is so deep it needs long path names the path is first
-    // converted to the Win32 file namespace by calling `canonicalize()`.
-
     let path = _remove_dir_contents(path)?;
     let metadata = path.metadata()?;
     if metadata.permissions().readonly() {
@@ -85,7 +94,13 @@ pub fn _remove_dir_contents<P: AsRef<Path>>(path: P) -> io::Result<PathBuf> {
 
 fn _delete_dir_contents(path: &PathBuf) -> io::Result<()> {
     log::trace!("scanning {}", &path.display());
-    let iter = path.read_dir()?.par_bridge();
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "parallel")] {
+            let iter = path.read_dir()?.par_bridge();
+        } else {
+            let mut iter = path.read_dir()?;
+        }
+    }
     iter.try_for_each(|dir_entry| -> io::Result<()> {
         let dir_entry = dir_entry?;
         let metadata = dir_entry.metadata()?;
