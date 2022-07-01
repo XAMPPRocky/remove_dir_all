@@ -49,8 +49,8 @@ mod test {
 
     cfg_if::cfg_if! {
         if #[cfg(windows)] {
-            const ENOTDIR:i32 = winapi::shared::winerror::ERROR_DIRECTORY as i32;
-            const ENOENT:i32 = winapi::shared::winerror::ERROR_FILE_NOT_FOUND as i32;
+            const ENOTDIR:i32 = windows_sys::Win32::Foundation::ERROR_DIRECTORY as i32;
+            const ENOENT:i32 = windows_sys::Win32::Foundation::ERROR_FILE_NOT_FOUND as i32;
         } else {
             const ENOTDIR:i32 = libc::ENOTDIR;
             const ENOENT:i32 = libc::ENOENT;

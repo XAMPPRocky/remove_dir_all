@@ -1,6 +1,7 @@
 use std::{
     fs::{self, OpenOptions},
     io,
+    ffi::c_void,
     mem::size_of,
     os::windows::prelude::*,
     path::{Path, PathBuf},
@@ -8,11 +9,9 @@ use std::{
 
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
-use winapi::shared::minwindef::*;
-use winapi::um::fileapi::*;
-use winapi::um::minwinbase::*;
-use winapi::um::winbase::*;
-use winapi::um::winnt::*;
+use windows_sys::Win32::System::SystemServices::*;
+use windows_sys::Win32::Storage::FileSystem::*;
+use windows_sys::Win32::Foundation::HANDLE;
 
 /// Reliably removes a directory and all of its children.
 ///
@@ -146,13 +145,13 @@ fn delete_readonly(metadata: fs::Metadata, path: &Path) -> io::Result<()> {
     file.set_permissions(perms)?;
 
     let mut info = FILE_DISPOSITION_INFO {
-        DeleteFile: TRUE as u8,
+        DeleteFileA: true as u8,
     };
     let result = unsafe {
         SetFileInformationByHandle(
-            file.as_raw_handle(),
+            file.as_raw_handle() as HANDLE,
             FileDispositionInfo,
-            &mut info as *mut FILE_DISPOSITION_INFO as LPVOID,
+            &mut info as *mut FILE_DISPOSITION_INFO as *mut c_void,
             size_of::<FILE_DISPOSITION_INFO>() as u32,
         )
     };
