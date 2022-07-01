@@ -1,6 +1,7 @@
 # unreleased
 
 - Added feature to enable use of rayon.
+- Migrated from winapi to windows-sys
 
 # 0.5.2
 

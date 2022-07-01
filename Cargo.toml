@@ -31,13 +31,14 @@ cfg-if = "1.0.0"
 log = "0.4.11"
 num_cpus = { version = "1.13", optional = true }
 rayon = { version = "1.4", optional = true }
-winapi = { version = "0.3", features = [
-  "std",
-  "errhandlingapi",
-  "winerror",
-  "fileapi",
-  "winbase",
-] }
+
+[target.'cfg(windows)'.dependencies.windows-sys]
+version = "0.36.0"
+features = [
+    "Win32_Foundation",
+    "Win32_Storage_FileSystem",
+    "Win32_System_SystemServices",
+]
 
 [target.'cfg(not(windows))'.dependencies]
 libc = "0.2"
