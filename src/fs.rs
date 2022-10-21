@@ -9,7 +9,6 @@ use std::{
 
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
-use windows_sys::Win32::System::SystemServices::*;
 use windows_sys::Win32::Storage::FileSystem::*;
 use windows_sys::Win32::Foundation::HANDLE;
 
@@ -145,7 +144,7 @@ fn delete_readonly(metadata: fs::Metadata, path: &Path) -> io::Result<()> {
     file.set_permissions(perms)?;
 
     let mut info = FILE_DISPOSITION_INFO {
-        DeleteFileA: true as u8,
+        DeleteFile: true as u8,
     };
     let result = unsafe {
         SetFileInformationByHandle(
