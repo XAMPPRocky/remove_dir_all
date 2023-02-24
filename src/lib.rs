@@ -269,7 +269,9 @@ mod tests {
         let tmp = TempDir::new()?;
         let ours = tmp.path().join("t.mkdir");
         let file = ours.join("file");
+        let nested = ours.join("another_dir");
         fs::create_dir(&ours)?;
+        fs::create_dir(&nested)?;
         File::create(&file)?;
         File::open(&file)?;
         Ok(Prep {
