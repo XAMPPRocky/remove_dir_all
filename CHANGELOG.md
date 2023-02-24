@@ -70,6 +70,24 @@
 - Made feature to control use of rayon off-by-default for easier integration by
   other crates.
 
+# 0.7.0
+
+- add remove_dir_contents and ensure_empty_dir
+
+# 0.6.1
+
+- update author
+- update README.md
+
+# 0.6.0
+
+- Added threaded deletion on windows
+- requires edition 2018 to build
+
+# 0.5.3
+
+- lints and doc fixes
+
 # 0.5.2
 
 - Added support for `aarch64-pc-windows-msvc`.
