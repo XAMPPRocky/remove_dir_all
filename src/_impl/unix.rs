@@ -19,7 +19,7 @@ impl Io for UnixIo {
         let source_fd = f.as_raw_fd();
         // F_DUPFD_CLOEXEC seems to be quite portable, but we should be prepared
         // to add in more codepaths here.
-        let fd = cvt(unsafe { fcntl(source_fd, F_DUPFD_CLOEXEC) })?;
+        let fd = cvt(unsafe { fcntl(source_fd, F_DUPFD_CLOEXEC, 0) })?;
         Ok(unsafe { File::from_raw_fd(fd) })
     }
 

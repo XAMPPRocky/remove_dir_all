@@ -219,6 +219,7 @@ mod tests {
     use std::path::PathBuf;
 
     use tempfile::TempDir;
+    use test_log::test;
 
     use crate::ensure_empty_dir;
     use crate::remove_dir_all;
@@ -232,7 +233,7 @@ mod tests {
         } else {
             const ENOTDIR:i32 = libc::ENOTDIR;
             const ENOENT:i32 = libc::ENOENT;
-            const INVALID_INPUT:i32 = libc::ENOENT;
+            const INVALID_INPUT:i32 = libc::EINVAL;
         }
     }
 

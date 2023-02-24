@@ -1,3 +1,9 @@
+# 0.8.1
+
+## Other changes
+
+- Fix use of fcntl, missing undocumented extra argument.
+
 # 0.8.0
 
 ## Security changes
