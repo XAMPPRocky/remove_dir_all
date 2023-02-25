@@ -147,7 +147,7 @@ doctest!("../README.md");
 mod _impl;
 
 /// Extension trait adding remove_dir_all support to File.
-trait RemoveDir {
+pub trait RemoveDir {
     /// Remove the contents of the dir.
     ///
     /// `debug_root`: identifies the directory contents being removed
