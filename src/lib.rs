@@ -1,10 +1,10 @@
 //! Reliably remove a directory and all of its children.
 //!
 //! This library provides an alternative implementation of
-//! `std::fs::remove_dir_all` from the Rust std library. It varies in the
+//! [`std::fs::remove_dir_all`] from the Rust std library. It varies in the
 //! following ways:
 //! - the `parallel` feature parallelises the deletion. This is useful when high
-//!   syscall latency is occuring, such as on Windows (deletion IO accrues to
+//!   syscall latency is occurring, such as on Windows (deletion IO accrues to
 //!   the process), or network file systems of any kind. This is off by default.
 //! - It tolerates files not being deleted atomically (this is a Windows
 //!   specific behaviour).
@@ -16,17 +16,17 @@
 //! deletion. This is because hardlinks can cause such changes to show up and
 //! affect the filesystem outside of the directory tree being deleted.
 //!   
-//! The extension trait `RemoveDir` can be used to invoke `remove_dir_all` on
-//! an open `File`, where it will error if the file is not a directory, and
-//! otherwise delete the contents. This allows callers to be more confident that
+//! The extension trait [`RemoveDir`] can be used to invoke `remove_dir_all` on
+//! an open [`File`](std::fs::File), where it will error if the file is not a directory,
+//! and otherwise delete the contents. This allows callers to be more confident that
 //! what is deleted is what was requested even in the presence of malicious
 //! actors changing the filesystem concurrently.
 //!
-//! The functions `remove_dir_all`, `remove_dir_contents` and `ensure_empty_dir`
+//! The functions [`remove_dir_all`], [`remove_dir_contents`], and [`ensure_empty_dir`]
 //! are intrinsically sensitive to file system races, as the path to the
 //! directory to delete can be substituted by an attacker inserting a symlink
 //! along that path. Relative paths with one path component are the least
-//! fragile, but using `RemoveDir::remove_dir_all` is recommended.
+//! fragile, but using [`RemoveDir::remove_dir_contents`] is recommended.
 //!
 //! ## Features
 //!
@@ -52,7 +52,7 @@
 //! being deleted can prevent the directory being deleted for an arbitrary
 //! period by extending the directory iterator indefinitely.
 //!
-//! Directory traversal only ever happens downwards. In future, to accomodate
+//! Directory traversal only ever happens downwards. In future, to accommodate
 //! very large directory trees (greater than file descriptor limits deep) the
 //! same path may be traversed multiple times, and the quadratic nature of that
 //! will be mitigated by a cache of open directories. See [#future-plans](Future
@@ -65,11 +65,11 @@
 //! trust-but-verify of the node type metadata returned from directory scanning:
 //! only names that appear to be directories get their contents scanned. The
 //! consequence is that if an attacker replaces a non-directory with a
-//! directory, or vice versa, an error will occur - but the remove_dir_all will
+//! directory, or vice versa, an error will occur - but the `remove_dir_all` will
 //! not escape from the directory tree. On Windows file deletion requires
 //! obtaining a handle to the file, but again the kind metadata from the
 //! directory scan is used to avoid re-querying the metadata. Symlinks are
-//! detected by a failure to open a path with O_NOFOLLOW, they are unlinked with
+//! detected by a failure to open a path with `O_NOFOLLOW`, they are unlinked with
 //! no further processing.
 //!
 //! ## Serial deletion
@@ -89,7 +89,7 @@
 //! We suggest permitting the end user to control this choice: when adding
 //! remove-dir-all as a dependency to a library crate, expose a feature
 //! "parallel" that sets `remove-dir-all/parallel`. This will permit the user of
-//! your library to control the parallel feature inside remove_dir_all
+//! your library to control the parallel feature inside `remove_dir_all`
 //!
 //! e.g.
 //!
@@ -120,7 +120,7 @@
 //! 3) unlink/SetFileInformationByHandle (to free up directories so they can be
 //!    rmdir'd)
 //!
-//! Scanning/unlinking/rmdiring is further biased by depth and lexographic
+//! Scanning/unlinking/rmdiring is further biased by depth and lexicographic
 //! order: this minimises the number of directories being worked on in parallel,
 //! so very branchy trees are less likely to exhaust kernel resources or
 //! application memory or thrash the open directory cache.
@@ -146,7 +146,7 @@ doctest!("../README.md");
 
 mod _impl;
 
-/// Extension trait adding remove_dir_all support to File.
+/// Extension trait adding `remove_dir_all` support to [`std::fs::File`].
 trait RemoveDir {
     /// Remove the contents of the dir.
     ///
@@ -155,15 +155,15 @@ trait RemoveDir {
 }
 
 /// Makes `path` an empty directory: if it does not exist, it is created it as
-/// an empty directory (as if with `std::fs::create_dir`); if it does exist, its
-/// contents are deleted (as if with `remove_dir_contents`).
+/// an empty directory (as if with [`std::fs::create_dir`]); if it does exist, its
+/// contents are deleted (as if with [`remove_dir_contents`]).
 ///
 /// It is an error if `path` exists but is not a directory, including a symlink
 /// to a directory.
 ///
 /// This is subject to file system races: a privileged process could be attacked
 /// by replacing parent directories of the supplied path with a link (e.g. to
-/// /etc). Consider using `RemoveDir::ensure_empty_dir()` instead.
+/// /etc). Consider using [`RemoveDir::remove_dir_contents`] instead.
 pub fn ensure_empty_dir<P: AsRef<Path>>(path: P) -> Result<()> {
     _impl::_ensure_empty_dir_path::<_impl::OsIo, _>(path)
 }
@@ -173,7 +173,7 @@ pub fn ensure_empty_dir<P: AsRef<Path>>(path: P) -> Result<()> {
 ///
 /// This is subject to file system races: a privileged process could be attacked
 /// by replacing parent directories of the supplied path with a link (e.g. to
-/// /etc).  Consider using `RemoveDir::remove_dir_contents()` instead.
+/// /etc). Consider using [`RemoveDir::remove_dir_contents`] instead.
 pub fn remove_dir_contents<P: AsRef<Path>>(path: P) -> Result<()> {
     _impl::_remove_dir_contents_path::<_impl::OsIo, P>(path)
 }
@@ -191,11 +191,11 @@ pub fn remove_dir_contents<P: AsRef<Path>>(path: P) -> Result<()> {
 /// Note: calling this on a non-directory (e.g. a symlink to a directory) will
 /// error.
 ///
-/// [remove_dir_all::RemoveDir::remove_dir_all] is somewhat safer and
+/// [`RemoveDir::remove_dir_contents`] is somewhat safer and
 /// recommended as the path based version is subject to file system races
 /// determining what to delete: a privileged process could be attacked by
 /// replacing parent directories of the supplied path with a link (e.g. to
-/// /etc).  Consider using `RemoveDir::remove_dir_all()` instead.
+/// /etc). Consider using [`RemoveDir::remove_dir_contents`] instead.
 pub fn remove_dir_all<P: AsRef<Path>>(path: P) -> Result<()> {
     let path = path.as_ref().normalize()?;
     _impl::remove_dir_all_path::<_impl::OsIo, _>(path)
