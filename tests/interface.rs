@@ -129,7 +129,7 @@ fn removes_files() {
     fs::create_dir_all(&path).unwrap();
 
     for i in 0..5 {
-        let filename = format!("empty-{}.txt", i);
+        let filename = format!("empty-{i}.txt");
         let filepath = path.join(filename);
 
         {
@@ -170,7 +170,7 @@ fn removes_read_only() {
     let path = tempdir.path().join("readonly");
 
     for i in 0..5 {
-        let subpath = path.join(format!("{}/subdir", i));
+        let subpath = path.join(format!("{i}/subdir"));
 
         fs::create_dir_all(&subpath).unwrap();
 
@@ -221,7 +221,7 @@ fn removes_symlinks() {
     fs::File::create(&link_target).unwrap();
     fs::create_dir(&root).unwrap();
     #[cfg(windows)]
-    std::os::windows::fs::symlink_file(&link_target, &link_name).unwrap();
+    std::os::windows::fs::symlink_file(&link_target, link_name).unwrap();
     #[cfg(not(windows))]
     std::os::unix::fs::symlink(&link_target, &link_name).unwrap();
     remove_dir_all::ensure_empty_dir(&root).unwrap();
