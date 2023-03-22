@@ -69,7 +69,10 @@ pub(crate) fn remove_dir_all_path<I: io::Io, P: AsRef<Path>>(path: P) -> Result<
     let debug_root = PathComponents::Path(if p.has_root() { p } else { Path::new(".") });
     remove_dir_contents_recursive::<OsIo>(d, &debug_root)?;
     // Opportunity 2 for races
-    std::fs::remove_dir(&path)
+    std::fs::remove_dir(&path)?;
+    #[cfg(feature = "log")]
+    log::trace!("removed {}", &debug_root);
+    Ok(())
 }
 
 use crate::RemoveDir;
