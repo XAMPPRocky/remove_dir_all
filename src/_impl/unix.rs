@@ -34,19 +34,6 @@ impl Io for UnixIo {
         todo!()
     }
 
-    fn clear_readonly(
-        _f: &fs::File,
-        _dir_debug_root: &'_ super::path_components::PathComponents<'_>,
-        _metadata: &fs::Metadata,
-    ) -> io::Result<()> {
-        // can't delete contents of a directory without 'w' on the directory, so
-        // you might expect to see logic here to check a directory. that said,
-        // remove_dir_all doesn't concern itself with permissions; it does
-        // concern itself with the readonly attribute on windows - but that is
-        // not a file permission.
-        Ok(())
-    }
-
     fn is_eloop(e: &io::Error) -> bool {
         e.raw_os_error() == Some(libc::ELOOP)
     }

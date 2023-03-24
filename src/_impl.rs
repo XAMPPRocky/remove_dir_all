@@ -5,8 +5,12 @@ use std::{
     path::Path,
 };
 
+#[cfg(windows)]
+use fs_at::os::windows::{FileExt, OpenOptionsExt};
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
+#[cfg(windows)]
+use windows_sys::Win32::Storage::FileSystem::{DELETE, FILE_LIST_DIRECTORY, FILE_READ_ATTRIBUTES};
 
 mod io;
 mod path_components;
@@ -58,7 +62,8 @@ pub(crate) fn _remove_dir_contents_path<I: io::Io, P: AsRef<Path>>(path: P) -> R
 /// exterior lifetime interface to dir removal
 fn _remove_dir_contents<I: io::Io>(d: &mut File, debug_root: &PathComponents<'_>) -> Result<()> {
     let owned_handle = I::duplicate_fd(d)?;
-    remove_dir_contents_recursive::<I>(owned_handle, debug_root)
+    remove_dir_contents_recursive::<I>(owned_handle, debug_root)?;
+    Ok(())
 }
 
 /// deprecated interface
@@ -84,7 +89,7 @@ use self::path_components::PathComponents;
 fn remove_dir_contents_recursive<I: io::Io>(
     mut d: File,
     debug_root: &PathComponents<'_>,
-) -> Result<()> {
+) -> Result<File> {
     #[cfg(feature = "log")]
     log::trace!("scanning {}", &debug_root);
     // We take a os level clone of the FD so that there are no lifetime
@@ -108,53 +113,78 @@ fn remove_dir_contents_recursive<I: io::Io>(
         }
         let dir_path = Path::new(name);
         let dir_debug_root = PathComponents::Component(debug_root, dir_path);
-        // Windows optimised: open everything always, which is not bad for
-        // linux, and portable to OS's and FS's that don't expose inode type in
-        // the readdir entries.
-
-        let mut opts = fs_at::OpenOptions::default();
-        opts.read(true)
-            .write(fs_at::OpenOptionsWriteMode::Write)
-            .follow(false);
-
-        let child_result = opts.open_dir_at(&dirfd, name);
-        let is_dir = match child_result {
-            Err(e) if !I::is_eloop(&e) => return Err(e),
-            Err(_) => false,
-            Ok(child_file) => {
-                let metadata = child_file.metadata()?;
-                let is_dir = metadata.is_dir();
-                I::clear_readonly(&child_file, &dir_debug_root, &metadata)?;
-
-                if is_dir {
-                    remove_dir_contents_recursive::<I>(child_file, &dir_debug_root)?;
-                    #[cfg(feature = "log")]
-                    log::trace!("rmdir: {}", &dir_debug_root);
-                    let opts = fs_at::OpenOptions::default();
-                    opts.rmdir_at(&dirfd, name).map_err(|e| {
-                        #[cfg(feature = "log")]
-                        log::debug!("error removing {}", dir_debug_root);
-                        e
-                    })?;
-                }
-                is_dir
+        #[cfg(windows)]
+        {
+            // On windows: open the file and then decide what to do with it.
+            let mut opts = fs_at::OpenOptions::default();
+            // Could possibly drop a syscall by dropping FILE_READ_ATTRIBUTES
+            // and trusting read_dir metadata more. OTOH that would introduce a
+            // race :/.
+            opts.desired_access(DELETE | FILE_LIST_DIRECTORY | FILE_READ_ATTRIBUTES);
+            let mut child_file = opts.open_path_at(&dirfd, name)?;
+            let metadata = child_file.metadata()?;
+            let is_dir = metadata.is_dir();
+            let is_symlink = metadata.is_symlink();
+            if is_dir && !is_symlink {
+                remove_dir_contents_recursive::<I>(
+                    I::duplicate_fd(&mut child_file)?,
+                    &dir_debug_root,
+                )?;
             }
-        };
-        if !is_dir {
             #[cfg(feature = "log")]
-            log::trace!("unlink: {}", &dir_debug_root);
-            opts.unlink_at(&dirfd, name).map_err(|e| {
+            log::trace!("delete: {}", &dir_debug_root);
+            child_file.delete_by_handle().map_err(|(_f, e)| {
                 #[cfg(feature = "log")]
                 log::debug!("error removing {}", dir_debug_root);
                 e
             })?;
         }
-
+        #[cfg(not(windows))]
+        {
+            // Otherwise, open the path safely but normally, fstat to see if its
+            // a dir, then either unlink or recursively delete
+            let mut opts = fs_at::OpenOptions::default();
+            opts.read(true)
+                .write(fs_at::OpenOptionsWriteMode::Write)
+                .follow(false);
+            let child_result = opts.open_dir_at(&dirfd, name);
+            let is_dir = match child_result {
+                // We expect is_eloop to be the only error
+                Err(e) if !I::is_eloop(&e) => return Err(e),
+                Err(_) => false,
+                Ok(child_file) => {
+                    let metadata = child_file.metadata()?;
+                    let is_dir = metadata.is_dir();
+                    if is_dir {
+                        remove_dir_contents_recursive::<I>(child_file, &dir_debug_root)?;
+                        #[cfg(feature = "log")]
+                        log::trace!("rmdir: {}", &dir_debug_root);
+                        let opts = fs_at::OpenOptions::default();
+                        opts.rmdir_at(&dirfd, name).map_err(|e| {
+                            #[cfg(feature = "log")]
+                            log::debug!("error removing {}", dir_debug_root);
+                            e
+                        })?;
+                    }
+                    is_dir
+                }
+            };
+            if !is_dir {
+                #[cfg(feature = "log")]
+                log::trace!("unlink: {}", &dir_debug_root);
+                opts.unlink_at(&dirfd, name).map_err(|e| {
+                    #[cfg(feature = "log")]
+                    log::debug!("error removing {}", dir_debug_root);
+                    e
+                })?;
+            }
+        }
         #[cfg(feature = "log")]
         log::trace!("removed {}", dir_debug_root);
+
         Ok(())
     })?;
     #[cfg(feature = "log")]
     log::trace!("scanned {}", &debug_root);
-    Ok(())
+    Ok(dirfd)
 }
