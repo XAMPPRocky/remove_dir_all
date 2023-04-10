@@ -100,7 +100,7 @@
 //! ...
 //! [dependencies]
 //! remove_dir_all = {version = "0.8"}
-//!
+//! ```
 //! ## Future Plans
 //!  Open directory handles are kept in
 //! a lg-spaced cache after the first 10 levels:
@@ -124,8 +124,6 @@
 //! order: this minimises the number of directories being worked on in parallel,
 //! so very branchy trees are less likely to exhaust kernel resources or
 //! application memory or thrash the open directory cache.
-
-//! ```
 
 #![deny(missing_debug_implementations)]
 #![deny(missing_docs)]
