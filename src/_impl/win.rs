@@ -2,7 +2,7 @@ use std::{
     ffi::c_void,
     fs::{File, OpenOptions},
     io::{self, Result},
-    mem::{size_of, MaybeUninit},
+    mem::MaybeUninit,
     os::windows::fs::OpenOptionsExt,
     os::windows::prelude::AsRawHandle,
     os::windows::prelude::*,
@@ -10,24 +10,14 @@ use std::{
 };
 
 use windows_sys::Win32::{
-    Foundation::{DuplicateHandle, DUPLICATE_SAME_ACCESS, ERROR_CANT_RESOLVE_FILENAME, HANDLE},
-    Storage::FileSystem::{
-        FileIdInfo, GetFileInformationByHandleEx, FILE_FLAG_BACKUP_SEMANTICS,
-        FILE_FLAG_OPEN_REPARSE_POINT, FILE_ID_INFO,
-    },
+    Foundation::{DuplicateHandle, DUPLICATE_SAME_ACCESS, HANDLE},
+    Storage::FileSystem::{FILE_FLAG_BACKUP_SEMANTICS, FILE_FLAG_OPEN_REPARSE_POINT},
     System::Threading::GetCurrentProcess,
 };
 
 use super::io::Io;
 
 pub(crate) struct WindowsIo;
-
-// basically FILE_ID_INFO but declared primitives to permit derives.
-#[derive(Debug, PartialEq)]
-pub(crate) struct VSNFileId {
-    vsn: u64,
-    file_id: [u8; 16],
-}
 
 impl Io for WindowsIo {
     fn duplicate_fd(f: &mut File) -> io::Result<File> {
@@ -64,31 +54,5 @@ impl Io for WindowsIo {
             ));
         }
         Ok(maybe_dir)
-    }
-
-    type UniqueIdentifier = VSNFileId;
-
-    fn unique_identifier(d: &File) -> io::Result<Self::UniqueIdentifier> {
-        let mut info = MaybeUninit::<FILE_ID_INFO>::uninit();
-        let bool_result = unsafe {
-            GetFileInformationByHandleEx(
-                d.as_raw_handle() as HANDLE,
-                FileIdInfo,
-                info.as_mut_ptr() as *mut c_void,
-                size_of::<FILE_ID_INFO>() as u32,
-            )
-        };
-        if bool_result == 0 {
-            return Err(io::Error::last_os_error());
-        }
-        let info = unsafe { info.assume_init() };
-        Ok(VSNFileId {
-            vsn: info.VolumeSerialNumber,
-            file_id: info.FileId.Identifier,
-        })
-    }
-
-    fn is_eloop(e: &io::Error) -> bool {
-        e.raw_os_error() == Some(ERROR_CANT_RESOLVE_FILENAME as i32)
     }
 }

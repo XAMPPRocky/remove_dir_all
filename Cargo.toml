@@ -10,10 +10,10 @@ include = [
     "Cargo.toml",
     "LICENCE-APACHE",
     "LICENCE-MIT",
-    "src/**/*",
     "README.md",
+    "src/**/*",
 ]
-keywords = ["utility", "filesystem", "remove_dir", "windows"]
+keywords = ["filesystem", "remove_dir", "utility", "windows"]
 license = "MIT OR Apache-2.0"
 name = "remove_dir_all"
 readme = "README.md"
@@ -34,7 +34,7 @@ required-features = ["cli"]
 cfg-if = "1.0.0"
 clap = { version = "4.1.11", optional = true, features = ["derive"] }
 env_logger = { version = "0.11.0", optional = true }
-fs_at = { version = "0.1.4" }
+fs_at = { version = "0.2.1" }
 log = { version = "0.4.11", optional = true }
 normpath = "1.0.1"
 rayon = { version = "1.4", optional = true }
