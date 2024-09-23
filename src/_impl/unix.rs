@@ -35,6 +35,20 @@ impl Io for UnixIo {
     }
 
     fn is_eloop(e: &io::Error) -> bool {
-        e.raw_os_error() == Some(libc::ELOOP)
+        // When the `NO_FOLLOW` flag is set, POSIX specifies that ELOOP be turned
+        // if the trailing component is a symlink.
+        // However, not all platforms follow POSIX on this.
+        //
+        // FreeBSD uses EMLINK: https://man.freebsd.org/cgi/man.cgi?query=open&sektion=2&n=1#end
+        // NetBSD uses EFTYPE: https://man.netbsd.org/open.2#ERRORS
+        cfg_if::cfg_if! {
+            if #[cfg(target_os = "freebsd")] {
+                matches!(e.raw_os_error(), Some(libc::ELOOP) | Some(libc::EMLINK))
+            } else if #[cfg(target_os = "netbsd")] {
+                matches!(e.raw_os_error(), Some(libc::ELOOP) | Some(libc::EFTYPE))
+            } else {
+                e.raw_os_error() == Some(libc::ELOOP)
+            }
+        }
     }
 }
