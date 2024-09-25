@@ -21,7 +21,7 @@ jobs:
           fetch-depth: 0
       
       - name: Run publish-action
-        uses: tu6ge/publish-action@0.4.5
+        uses: tu6ge/publish-action@v0.4.5
         env:
           # This can help you tagging the github repository
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
