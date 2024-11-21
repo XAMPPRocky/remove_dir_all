@@ -196,7 +196,77 @@ pub fn remove_dir_contents<P: AsRef<Path>>(path: P) -> Result<()> {
 /// /etc). Consider using [`RemoveDir::remove_dir_contents`] instead.
 pub fn remove_dir_all<P: AsRef<Path>>(path: P) -> Result<()> {
     let path = path.as_ref().normalize()?;
-    _impl::remove_dir_all_path::<_impl::OsIo, _>(path)
+    _impl::remove_dir_all_path::<_impl::OsIo, _>(path, _impl::default_parallel_mode())
+}
+
+/// How to parallelise remove_dir_all().
+#[derive(Debug, Clone, Copy)]
+enum ParallelMode {
+    /// No parallelism.
+    Serial,
+    /// Parallelise readdir and unlink operations - the default when the parallel feature is enabled.
+    #[cfg(feature = "parallel")]
+    Parallel,
+}
+
+/// Builder for configuring the parallelism of remove_dir_all.
+#[derive(Debug, Clone, Copy)]
+#[non_exhaustive]
+pub struct RemoverBuilder {
+    parallel: ParallelMode,
+}
+
+impl RemoverBuilder {
+    /// Create a new RemoverBuilder.
+    pub fn new() -> Self {
+        Self {
+            #[cfg(feature = "parallel")]
+            parallel: ParallelMode::Parallel,
+            #[cfg(not(feature = "parallel"))]
+            parallel: ParallelMode::Serial,
+        }
+    }
+
+    /// Serialise all IO operations.
+    pub fn serial(mut self) -> Self {
+        self.parallel = ParallelMode::Serial;
+        self
+    }
+
+    /// Parallelise the removal of directories.
+    #[cfg(feature = "parallel")]
+    pub fn parallel(mut self) -> Self {
+        self.parallel = ParallelMode::Parallel;
+        self
+    }
+
+    /// Build the Remover.
+    pub fn build(self) -> Remover {
+        Remover {
+            parallel: self.parallel,
+        }
+    }
+}
+
+impl Default for RemoverBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Remover holds configuration for different ways of removing directories.
+#[derive(Debug, Clone, Copy)]
+#[non_exhaustive]
+pub struct Remover {
+    parallel: ParallelMode,
+}
+
+impl Remover {
+    /// Remove the directory and all of its children.
+    pub fn remove_dir_all<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+        let path = path.as_ref().normalize()?;
+        _impl::remove_dir_all_path::<_impl::OsIo, _>(path, self.parallel)
+    }
 }
 
 #[allow(deprecated)]
