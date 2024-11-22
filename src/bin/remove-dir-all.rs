@@ -20,8 +20,8 @@ struct Cli {
     #[arg(value_name = "FILE")]
     names: Vec<PathBuf>,
     /// Choose the parallelism strategy
-    #[arg(short = 'p', long = "parallelism", default_value = "parallel")]
-    parallelism: Parallelism,
+    #[arg(short = 'p', long = "parallelism")]
+    parallelism: Option<Parallelism>,
 }
 
 fn main() -> Result<()> {
@@ -29,8 +29,9 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     let remover = match cli.parallelism {
-        Parallelism::Serial => remove_dir_all::RemoverBuilder::new().serial().build(),
-        Parallelism::Parallel => remove_dir_all::RemoverBuilder::new().parallel().build(),
+        None => remove_dir_all::RemoverBuilder::new().build(),
+        Some(Parallelism::Serial) => remove_dir_all::RemoverBuilder::new().serial().build(),
+        Some(Parallelism::Parallel) => remove_dir_all::RemoverBuilder::new().parallel().build(),
     };
 
     for p in cli.names {

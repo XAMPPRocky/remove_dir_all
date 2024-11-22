@@ -5,7 +5,12 @@
 //! following ways:
 //! - the `parallel` feature parallelises the deletion. This is useful when high
 //!   syscall latency is occurring, such as on Windows (deletion IO accrues to
-//!   the process), or network file systems of any kind. This is off by default.
+//!   the process), or network file systems of any kind. This feature is off by
+//!   default. When enabled, it will disable itself on MacOS because of the bug
+//!   reported in this [blog
+//!   post](https://gregoryszorc.com/blog/2018/10/29/global-kernel-locks-in-apfs/).
+//!   Use [`RemoverBuilder`] to override this behaviour and force enable/disable
+//!   parallelism at runtime.
 //! - It tolerates files not being deleted atomically (this is a Windows
 //!   specific behaviour).
 //! - It resets the readonly flag on Windows as needed.
@@ -17,20 +22,22 @@
 //! affect the filesystem outside of the directory tree being deleted.
 //!   
 //! The extension trait [`RemoveDir`] can be used to invoke `remove_dir_all` on
-//! an open [`File`](std::fs::File), where it will error if the file is not a directory,
-//! and otherwise delete the contents. This allows callers to be more confident that
-//! what is deleted is what was requested even in the presence of malicious
-//! actors changing the filesystem concurrently.
+//! an open [`File`](std::fs::File), where it will error if the file is not a
+//! directory, and otherwise delete the contents. This allows callers to be more
+//! confident that what is deleted is what was requested even in the presence of
+//! malicious actors changing the filesystem concurrently.
 //!
-//! The functions [`remove_dir_all`], [`remove_dir_contents`], and [`ensure_empty_dir`]
-//! are intrinsically sensitive to file system races, as the path to the
-//! directory to delete can be substituted by an attacker inserting a symlink
-//! along that path. Relative paths with one path component are the least
-//! fragile, but using [`RemoveDir::remove_dir_contents`] is recommended.
+//! The functions [`remove_dir_all`], [`remove_dir_contents`], and
+//! [`ensure_empty_dir`] are intrinsically sensitive to file system races, as
+//! the path to the directory to delete can be substituted by an attacker
+//! inserting a symlink along that path. Relative paths with one path component
+//! are the least fragile, but using [`RemoveDir::remove_dir_contents`] is
+//! recommended.
 //!
 //! ## Features
 //!
-//! - parallel: When enabled, deletion of directories is parallised. (#parallel)[more details]
+//! - parallel: When enabled, deletion of directories is parallised.
+//!   (#parallel)[more details]
 //! - log: Include some log messages about the deletion taking place.
 //!
 //! About the implementation. The implementation prioritises security, then
@@ -65,12 +72,12 @@
 //! trust-but-verify of the node type metadata returned from directory scanning:
 //! only names that appear to be directories get their contents scanned. The
 //! consequence is that if an attacker replaces a non-directory with a
-//! directory, or vice versa, an error will occur - but the `remove_dir_all` will
-//! not escape from the directory tree. On Windows file deletion requires
+//! directory, or vice versa, an error will occur - but the `remove_dir_all`
+//! will not escape from the directory tree. On Windows file deletion requires
 //! obtaining a handle to the file, but again the kind metadata from the
 //! directory scan is used to avoid re-querying the metadata. Symlinks are
-//! detected by a failure to open a path with `O_NOFOLLOW`, they are unlinked with
-//! no further processing.
+//! detected by a failure to open a path with `O_NOFOLLOW`, they are unlinked
+//! with no further processing.
 //!
 //! ## Serial deletion
 //!
@@ -102,15 +109,14 @@
 //! remove_dir_all = {version = "0.8"}
 //! ```
 //! ## Future Plans
-//!  Open directory handles are kept in
-//! a lg-spaced cache after the first 10 levels:
-//! level10/skipped1/level12/skipped2/skipped3/skipped4/level16. If EMFILE is
-//! encountered, no more handles are cached, and directories are opened by
-//! re-traversing from the closest previously opened handle. Deletion should
-//! succeed even only 4 file descriptors are available: one to hold the root,
-//! two to iterate individual directories, and one to open-and-delete individual
-//! files, though that will be quadratic in the depth of the tree, successfully
-//! deleting leaves only on each iteration.
+//!  Open directory handles are kept in a lg-spaced cache after the first 10
+//! levels: level10/skipped1/level12/skipped2/skipped3/skipped4/level16. If
+//! EMFILE is encountered, no more handles are cached, and directories are
+//! opened by re-traversing from the closest previously opened handle. Deletion
+//! should succeed even only 4 file descriptors are available: one to hold the
+//! root, two to iterate individual directories, and one to open-and-delete
+//! individual files, though that will be quadratic in the depth of the tree,
+//! successfully deleting leaves only on each iteration.
 //!
 //! IO Prioritisation:
 //! 1) directory scanning when few paths are queued for deletion (to avoid
@@ -220,10 +226,7 @@ impl RemoverBuilder {
     /// Create a new RemoverBuilder.
     pub fn new() -> Self {
         Self {
-            #[cfg(feature = "parallel")]
-            parallel: ParallelMode::Parallel,
-            #[cfg(not(feature = "parallel"))]
-            parallel: ParallelMode::Serial,
+            parallel: _impl::default_parallel_mode(),
         }
     }
 

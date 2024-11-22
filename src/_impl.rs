@@ -26,9 +26,9 @@ cfg_if::cfg_if! {
 }
 
 pub(crate) fn default_parallel_mode() -> ParallelMode {
-    #[cfg(feature = "parallel")]
+    #[cfg(all(feature = "parallel", not(target_os = "macos")))]
     return ParallelMode::Parallel;
-    #[cfg(not(feature = "parallel"))]
+    #[cfg(any(not(feature = "parallel"), target_os = "macos"))]
     return ParallelMode::Serial;
 }
 
