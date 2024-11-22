@@ -13,6 +13,7 @@ pub(crate) trait Io {
     fn open_dir(p: &Path) -> io::Result<File>;
 
     #[cfg(not(windows))]
+    #[allow(dead_code)]
     fn unique_identifier(d: &File) -> io::Result<Self::UniqueIdentifier>;
 
     #[cfg(not(windows))]
