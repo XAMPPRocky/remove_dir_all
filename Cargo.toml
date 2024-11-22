@@ -5,7 +5,7 @@ authors = [
 ]
 categories = ["filesystem"]
 description = "A safe, reliable implementation of remove_dir_all for Windows"
-edition = "2018"
+edition = "2021"
 include = [
     "Cargo.toml",
     "LICENCE-APACHE",
@@ -18,7 +18,7 @@ license = "MIT OR Apache-2.0"
 name = "remove_dir_all"
 readme = "README.md"
 repository = "https://github.com/XAMPPRocky/remove_dir_all.git"
-version = "0.8.4"
+version = "1.0.0"
 
 [features]
 cli = ["dep:clap", "dep:env_logger", "log", "parallel"]

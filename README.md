@@ -30,4 +30,5 @@ fn main() {
 ```
 
 ## Minimum Rust Version
+
 The minimum rust version for `remove_dir_all` is the latest stable release, and the minimum version may be bumped through patch releases. You can pin to a specific version by setting by add `=` to your version (e.g. `=0.6.0`), or commiting a `Cargo.lock` file to your project.
