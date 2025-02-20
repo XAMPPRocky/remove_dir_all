@@ -341,10 +341,19 @@ mod tests {
         let ours = tmp.path().join("t.mkdir");
         let file = ours.join("file");
         let nested = ours.join("another_dir");
+        let fifo = ours.join("fifo");
         fs::create_dir(&ours)?;
         fs::create_dir(nested)?;
         File::create(&file)?;
         File::open(&file)?;
+        #[cfg(unix)]
+        {
+            unsafe {
+                use std::ffi::CString;
+                let fifo_cstr = CString::new(fifo.to_str().unwrap()).unwrap();
+                libc::mkfifo(fifo_cstr.as_ptr(), 0o644);
+            };
+        }
         Ok(Prep {
             _tmp: tmp,
             ours,
