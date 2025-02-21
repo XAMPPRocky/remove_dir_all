@@ -179,21 +179,19 @@ fn scan_and_remove_entry_recursively<I: io::Io>(
             .write(fs_at::OpenOptionsWriteMode::Write)
             .follow(false);
         let child_result = opts.open_at(dirfd, name);
-        let child_file = match child_result {
+        let child_directory = match child_result {
             // If we get EISDIR, we open it as a directory
             Err(e) if e.raw_os_error() == Some(libc::EISDIR) => {
                 Some(opts.open_dir_at(dirfd, name)?)
             }
+            // The below options cover files that are not directories
             // We expect is_eloop to be the only other error
             Err(e) if !I::is_eloop(&e) => return Err(e),
             Err(_) => None,
-            Ok(child_file) => {
-                let metadata = child_file.metadata()?;
-                metadata.is_dir().then_some(child_file)
-            }
+            Ok(_) => None,
         };
-        if let Some(child_file) = child_file {
-            remove_dir_contents_recursive::<I>(child_file, &dir_debug_root, parallel)?;
+        if let Some(child_directory) = child_directory {
+            remove_dir_contents_recursive::<I>(child_directory, &dir_debug_root, parallel)?;
             #[cfg(feature = "log")]
             log::trace!("rmdir: {}", &dir_debug_root);
             let opts = fs_at::OpenOptions::default();
