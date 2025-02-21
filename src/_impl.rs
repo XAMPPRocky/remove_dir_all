@@ -180,10 +180,11 @@ fn scan_and_remove_entry_recursively<I: io::Io>(
             .follow(false);
         let child_result = opts.open_at(dirfd, name);
         let child_file = match child_result {
-            // We expect is_eloop to be the only error
+            // If we get EISDIR, we open it as a directory
             Err(e) if e.raw_os_error() == Some(libc::EISDIR) => {
                 Some(opts.open_dir_at(dirfd, name)?)
             }
+            // We expect is_eloop to be the only other error
             Err(e) if !I::is_eloop(&e) => return Err(e),
             Err(_) => None,
             Ok(child_file) => {
