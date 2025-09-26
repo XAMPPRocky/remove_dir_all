@@ -178,29 +178,29 @@ fn scan_and_remove_entry_recursively<I: io::Io>(
         opts.read(true)
             .write(fs_at::OpenOptionsWriteMode::Write)
             .follow(false);
-        let child_result = opts.open_dir_at(dirfd, name);
-        let is_dir = match child_result {
-            // We expect is_eloop to be the only error
-            Err(e) if !I::is_eloop(&e) => return Err(e),
-            Err(_) => false,
-            Ok(child_file) => {
-                let metadata = child_file.metadata()?;
-                let is_dir = metadata.is_dir();
-                if is_dir {
-                    remove_dir_contents_recursive::<I>(child_file, &dir_debug_root, parallel)?;
-                    #[cfg(feature = "log")]
-                    log::trace!("rmdir: {}", &dir_debug_root);
-                    let opts = fs_at::OpenOptions::default();
-                    opts.rmdir_at(dirfd, name).map_err(|e| {
-                        #[cfg(feature = "log")]
-                        log::debug!("error removing {}", dir_debug_root);
-                        e
-                    })?;
-                }
-                is_dir
+        let child_result = opts.open_at(dirfd, name);
+        let child_directory = match child_result {
+            // If we get EISDIR, we open it as a directory
+            Err(e) if e.raw_os_error() == Some(libc::EISDIR) => {
+                Some(opts.open_dir_at(dirfd, name)?)
             }
+            // The below options cover files that are not directories
+            // We expect is_eloop to be the only other error
+            Err(e) if !I::is_eloop(&e) => return Err(e),
+            Err(_) => None,
+            Ok(_) => None,
         };
-        if !is_dir {
+        if let Some(child_directory) = child_directory {
+            remove_dir_contents_recursive::<I>(child_directory, &dir_debug_root, parallel)?;
+            #[cfg(feature = "log")]
+            log::trace!("rmdir: {}", &dir_debug_root);
+            let opts = fs_at::OpenOptions::default();
+            opts.rmdir_at(dirfd, name).map_err(|e| {
+                #[cfg(feature = "log")]
+                log::debug!("error removing {}", dir_debug_root);
+                e
+            })?;
+        } else {
             #[cfg(feature = "log")]
             log::trace!("unlink: {}", &dir_debug_root);
             opts.unlink_at(dirfd, name).map_err(|e| {
