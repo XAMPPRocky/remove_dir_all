@@ -45,7 +45,7 @@ features = [
     "Win32_Storage_FileSystem",
     "Win32_System_Threading",
 ]
-version = "0.60.1"
+version = "0.61.1"
 
 [target.'cfg(not(windows))'.dependencies]
 cvt = "0.1.1"
