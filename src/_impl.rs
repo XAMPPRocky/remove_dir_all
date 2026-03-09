@@ -180,8 +180,9 @@ fn scan_and_remove_entry_recursively<I: io::Io>(
             .follow(false);
         let child_result = opts.open_dir_at(dirfd, name);
         let is_dir = match child_result {
-            // We expect is_eloop to be the only error
-            Err(e) if !I::is_eloop(&e) => return Err(e),
+            // Errors indicating a non-directory entry (symlink, FIFO, socket,
+            // regular file with O_DIRECTORY, etc.) — fall through to unlink_at.
+            Err(e) if !I::is_not_dir_open_error(&e) => return Err(e),
             Err(_) => false,
             Ok(child_file) => {
                 let metadata = child_file.metadata()?;

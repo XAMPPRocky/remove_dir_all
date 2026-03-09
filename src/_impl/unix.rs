@@ -34,20 +34,25 @@ impl Io for UnixIo {
         todo!()
     }
 
-    fn is_eloop(e: &io::Error) -> bool {
-        // When the `NO_FOLLOW` flag is set, POSIX specifies that ELOOP be turned
-        // if the trailing component is a symlink.
-        // However, not all platforms follow POSIX on this.
-        //
-        // FreeBSD uses EMLINK: https://man.freebsd.org/cgi/man.cgi?query=open&sektion=2&n=1#end
-        // NetBSD uses EFTYPE: https://man.netbsd.org/open.2#ERRORS
+    fn is_not_dir_open_error(e: &io::Error) -> bool {
+        // ENOTDIR: open_dir_at returned O_DIRECTORY rejection — entry is not a directory.
+        // ENXIO: AF_UNIX sockets return this when opened with O_RDONLY.
+        // ELOOP: O_NOFOLLOW on a symlink. POSIX specifies ELOOP, but some
+        //   platforms differ:
+        //   FreeBSD uses EMLINK: https://man.freebsd.org/cgi/man.cgi?query=open&sektion=2&n=1#end
+        //   NetBSD uses EFTYPE: https://man.netbsd.org/open.2#ERRORS
         cfg_if::cfg_if! {
             if #[cfg(target_os = "freebsd")] {
-                matches!(e.raw_os_error(), Some(libc::ELOOP) | Some(libc::EMLINK))
+                matches!(e.raw_os_error(),
+                    Some(libc::ENOTDIR) | Some(libc::ENXIO) |
+                    Some(libc::ELOOP) | Some(libc::EMLINK))
             } else if #[cfg(target_os = "netbsd")] {
-                matches!(e.raw_os_error(), Some(libc::ELOOP) | Some(libc::EFTYPE))
+                matches!(e.raw_os_error(),
+                    Some(libc::ENOTDIR) | Some(libc::ENXIO) |
+                    Some(libc::ELOOP) | Some(libc::EFTYPE))
             } else {
-                e.raw_os_error() == Some(libc::ELOOP)
+                matches!(e.raw_os_error(),
+                    Some(libc::ENOTDIR) | Some(libc::ENXIO) | Some(libc::ELOOP))
             }
         }
     }

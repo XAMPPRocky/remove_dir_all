@@ -1,3 +1,14 @@
+# Unreleased
+
+## Bug fixes
+
+- Unix: `open_dir_at` errors other than symlink-detection (`ELOOP`/`EMLINK`/
+  `EFTYPE`) that indicate a non-directory entry — specifically `ENXIO` (returned
+  when opening an `AF_UNIX` socket) and `ENOTDIR` (returned when `O_DIRECTORY`
+  is in effect) — are now treated as "not a directory" and the entry is removed
+  with `unlink_at` rather than propagating an error. Fixes removal of
+  directories containing Unix-domain sockets. (#82)
+
 # 0.8.1
 
 ## Other changes
