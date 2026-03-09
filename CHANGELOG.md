@@ -9,6 +9,50 @@
   with `unlink_at` rather than propagating an error. Fixes removal of
   directories containing Unix-domain sockets. (#82)
 
+# 1.0.0
+
+## New features
+
+- New `Builder` and `Remover` structs provide a configurable API for
+  controlling parallel deletion at runtime, exposed via the `remove_dir_all`
+  crate root and the `remove-dir-all` CLI binary. (#80)
+
+## Other changes
+
+- macOS: parallel deletion is now disabled by default due to a global kernel
+  lock in APFS that causes thrashing when `readdir` runs concurrently across
+  threads. Parallelism can still be enabled explicitly via `Builder`. (#80)
+
+# 0.8.4
+
+## Bug fixes
+
+- Unix: correctly detect symlinks on FreeBSD (`EMLINK`) and NetBSD (`EFTYPE`),
+  which do not use `ELOOP` in response to `O_NOFOLLOW`. (#76)
+
+# 0.8.3
+
+## Other changes
+
+- Windows: simplified implementation using `fs_at`'s unified deletion path;
+  removed significant internal dead code. (#72)
+
+# 0.8.2
+
+## New features
+
+- `RemoveDir` trait is now public. (#59)
+- Added `remove-dir-all` CLI binary (opt-in via the `cli` Cargo feature). (#61)
+
+## Bug fixes
+
+- Windows: use `fs_at`'s POSIX-deletion support to correctly handle in-use
+  files on Windows, fixing #34. (#64)
+
+## Other changes
+
+- Improved crate documentation. (#58)
+
 # 0.8.1
 
 ## Other changes
