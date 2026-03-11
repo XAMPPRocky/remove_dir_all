@@ -1,12 +1,69 @@
-# 0.8.1
+# Changelog
 
-## Other changes
+## Unreleased
+
+### Bug fixes
+
+- Unix: `open_dir_at` errors other than symlink-detection (`ELOOP`/`EMLINK`/
+  `EFTYPE`) that indicate a non-directory entry — specifically `ENXIO` (returned
+  when opening an `AF_UNIX` socket) and `ENOTDIR` (returned when `O_DIRECTORY`
+  is in effect) — are now treated as "not a directory" and the entry is removed
+  with `unlink_at` rather than propagating an error. Fixes removal of
+  directories containing Unix-domain sockets. (#82)
+
+## 1.0.0
+
+### New features
+
+- New `Builder` and `Remover` structs provide a configurable API for
+  controlling parallel deletion at runtime, exposed via the `remove_dir_all`
+  crate root and the `remove-dir-all` CLI binary. (#80)
+
+### Other changes
+
+- macOS: parallel deletion is now disabled by default due to a global kernel
+  lock in APFS that causes thrashing when `readdir` runs concurrently across
+  threads. Parallelism can still be enabled explicitly via `Builder`. (#80)
+
+## 0.8.4
+
+### Bug fixes
+
+- Unix: correctly detect symlinks on FreeBSD (`EMLINK`) and NetBSD (`EFTYPE`),
+  which do not use `ELOOP` in response to `O_NOFOLLOW`. (#76)
+
+## 0.8.3
+
+### Other changes
+
+- Windows: simplified implementation using `fs_at`'s unified deletion path;
+  removed significant internal dead code. (#72)
+
+## 0.8.2
+
+### New features
+
+- `RemoveDir` trait is now public. (#59)
+- Added `remove-dir-all` CLI binary (opt-in via the `cli` Cargo feature). (#61)
+
+### Bug fixes
+
+- Windows: use `fs_at`'s POSIX-deletion support to correctly handle in-use
+  files on Windows, fixing #34. (#64)
+
+### Other changes
+
+- Improved crate documentation. (#58)
+
+## 0.8.1
+
+### Other changes
 
 - Fix use of fcntl, missing undocumented extra argument.
 
-# 0.8.0
+## 0.8.0
 
-## Security changes
+### Security changes
 
 - Fix TOCTOU race conditions both inside the implementation of functions and the
   contract: functions now only operate on directories. Callers wanting to
@@ -65,37 +122,37 @@
   functions cannot assume anything about the particular threat model of a
   program and must err on the side of caution.
 
-## Other changes
+### Other changes
 
 - Made feature to control use of rayon off-by-default for easier integration by
   other crates.
 
-# 0.7.0
+## 0.7.0
 
 - add remove_dir_contents and ensure_empty_dir
 
-# 0.6.1
+## 0.6.1
 
 - update author
 - update README.md
 
-# 0.6.0
+## 0.6.0
 
 - Added threaded deletion on windows
 - requires edition 2018 to build
 
-# 0.5.3
+## 0.5.3
 
 - lints and doc fixes
 
-# 0.5.2
+## 0.5.2
 
 - Added support for `aarch64-pc-windows-msvc`.
 
-# 0.5.1
+## 0.5.1
 
 - Fixed deletion of readonly items.
 
-# 0.5.0
+## 0.5.0
 
 - Upgraded to winapi 0.3.
